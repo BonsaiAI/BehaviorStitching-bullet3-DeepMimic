@@ -1,6 +1,10 @@
 [![Travis Build Status](https://api.travis-ci.org/bulletphysics/bullet3.png?branch=master)](https://travis-ci.org/bulletphysics/bullet3)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/6sly9uxajr6xsstq)](https://ci.appveyor.com/project/erwincoumans/bullet3)
 
+# Follow DeepMimic Steps for TensorFlow Setup
+
+https://github.com/xbpeng/DeepMimic
+
 # Bullet Physics SDK
 
 This is the official C++ source code repository of the Bullet Physics SDK: real-time collision detection and multi-physics simulation for VR, games, visual effects, robotics, machine learning etc.
