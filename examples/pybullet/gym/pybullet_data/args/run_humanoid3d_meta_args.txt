@@ -13,7 +13,8 @@
 
 --char_ctrls ct_pd
 --char_ctrl_files data/controllers/humanoid3d_ctrl.txt
---motion_file data/motions/humanoid3d_spinkick.txt
+#--motion_file data/motions/humanoid3d_backflip.txt
+--motion_file data/motions/humanoid3d_run.txt
 --sync_char_root_pos true
 --sync_char_root_rot false
 
@@ -22,5 +23,10 @@
 
 #--output_path output
 #--int_output_path output/intermediate
---model_files data/policies/humanoid3d/agent0_model.ckpt
-#--model_files data/policies/humanoid3d/humanoid3d_spinkick.ckpt
+#--model_files data/policies/humanoid3d/humanoid3d_backflip.ckpt
+#--model_files data/policies/humanoid3d/agent0_model.ckpt
+--model_files data/policies/humanoid3d/humanoid3d_run.ckpt
+
+--meta_agent true
+--sub_model_files data/policies/humanoid3d/humanoid3d_jump.ckpt data/policies/humanoid3d/humanoid3d_run.ckpt
+#--sub_model_files data/policies/humanoid3d/humanoid3d_jump.ckpt data/policies/humanoid3d/humanoid3d_walk.ckpt

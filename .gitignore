@@ -2,7 +2,7 @@
 /build3/gmake
 /build3/vs2010
 /build_cmake/
-/.ideal
+**.ideal/**
 
 *.pyc
 
