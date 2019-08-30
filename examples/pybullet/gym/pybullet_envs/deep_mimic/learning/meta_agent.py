@@ -19,16 +19,6 @@ Meta Policy Optimization Agent
 '''
 
 
-def save_to_dict(sess, collection=tf.GraphKeys.TRAINABLE_VARIABLES, scope = ''):
-    # return {v.name: sess.run(v) for v in tf.get_collection(collection, scope)}
-    return {v.name: sess.run(v) for v in tf.global_variables(scope)}
-
-
-def load_from_dict(sess, data):
-    for v in tf.global_variables():
-        if v.name in data.keys():
-            sess.run(v.assign(data[v.name]))
-
 
 class METAAgent(PGAgent):
   NAME = "META"
@@ -83,7 +73,7 @@ class METAAgent(PGAgent):
 
       # with tf.variable_scope('main/actor'):
       with current_ppo_agent.sess as sess:
-        dict = save_to_dict(sess, scope=current_ppo_agent.tf_scope + '/' + 'main/actor')
+        dict = TFUtil.save_to_dict(sess, scope=current_ppo_agent.tf_scope + '/' + 'main/actor')
 
       # tf_var = current_ppo_agent._tf_vars('main/actor')
       # np_var = current_ppo_agent.sess.run(tf_var)
@@ -119,7 +109,7 @@ class METAAgent(PGAgent):
       Logger.print2('Model loaded from: ' + in_path)
 
       # load processed parameters
-      load_from_dict(self.sess, self.np_averaged_data)
+      TFUtil.load_from_dict(self.sess, self.np_averaged_data)
 
       # ops = {}
       # with tf.variable_scope('', reuse=True):

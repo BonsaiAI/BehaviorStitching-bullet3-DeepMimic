@@ -4,6 +4,16 @@ import os
 
 xavier_initializer = tf.contrib.layers.xavier_initializer()
 
+def save_to_dict(sess, collection=tf.GraphKeys.TRAINABLE_VARIABLES, scope = ''):
+    # return {v.name: sess.run(v) for v in tf.get_collection(collection, scope)}
+    return {v.name: sess.run(v) for v in tf.global_variables(scope)}
+
+
+def load_from_dict(sess, data):
+    for v in tf.global_variables():
+        if v.name in data.keys():
+            sess.run(v.assign(data[v.name]))
+
 
 def disable_gpu():
   os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
