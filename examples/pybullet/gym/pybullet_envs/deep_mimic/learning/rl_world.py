@@ -67,12 +67,22 @@ class RLWorld(object):
     model_files = self.arg_parser.parse_strings('model_files')
     assert (len(model_files) == num_agents or len(model_files) == 0)
 
+# for meta agent
+    meta_agent = self.arg_parser.parse_strings('meta_agent')
+    if meta_agent:
+      sub_model_files = self.arg_parser.parse_strings('sub_model_files')
+      assert (len(sub_model_files) > 0)
+
     output_path = self.arg_parser.parse_string('output_path')
     int_output_path = self.arg_parser.parse_string('int_output_path')
 
     for i in range(num_agents):
       curr_file = agent_files[i]
-      curr_agent = self._build_agent(i, curr_file)
+
+      if meta_agent:
+        curr_agent = self._build_meta_agent(i, curr_file)
+      else:
+        curr_agent = self._build_agent(i, curr_file)
 
       if curr_agent is not None:
         curr_agent.output_dir = output_path
@@ -139,6 +149,16 @@ class RLWorld(object):
       agent = None
     else:
       agent = AgentBuilder.build_agent(self, id, agent_file)
+      assert (agent != None), 'Failed to build agent {:d} from: {}'.format(id, agent_file)
+
+    return agent
+
+  def _build_meta_agent(self, id, agent_file):
+    Logger.print2('Agent {:d}: {}'.format(id, agent_file))
+    if (agent_file == 'none'):
+      agent = None
+    else:
+      agent = AgentBuilder.build_meta_agent(self, id, agent_file)
       assert (agent != None), 'Failed to build agent {:d} from: {}'.format(id, agent_file)
 
     return agent

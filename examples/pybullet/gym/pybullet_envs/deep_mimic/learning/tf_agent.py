@@ -28,7 +28,9 @@ class TFAgent(RLAgent):
   def save_model(self, out_path):
     with self.sess.as_default(), self.graph.as_default():
       try:
-        save_path = self.saver.save(self.sess, out_path, write_meta_graph=False, write_state=False)
+        # save_path = self.saver.save(self.sess, out_path, write_meta_graph=False, write_state=False)
+        save_path = self.saver.save(self.sess, out_path, write_meta_graph=True, write_state=True)
+        tf.summary.FileWriter(out_path, self.sess.graph)
         Logger.print2('Model saved to: ' + save_path)
       except:
         Logger.print2("Failed to save model to: " + save_path)

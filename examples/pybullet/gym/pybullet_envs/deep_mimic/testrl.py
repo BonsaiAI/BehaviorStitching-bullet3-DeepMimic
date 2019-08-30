@@ -8,6 +8,7 @@ print("parentdir=", parentdir)
 import json
 from pybullet_envs.deep_mimic.learning.rl_world import RLWorld
 from pybullet_envs.deep_mimic.learning.ppo_agent import PPOAgent
+from pybullet_envs.deep_mimic.learning.meta_agent import METAAgent
 
 import pybullet_data
 from pybullet_utils.arg_parser import ArgParser
@@ -24,7 +25,7 @@ def update_world(world, time_elapsed):
   timeStep = update_timestep
   world.update(timeStep)
   reward = world.env.calc_reward(agent_id=0)
-  #print("reward=",reward)
+  print("reward=",reward)
   end_episode = world.env.is_episode_end()
   if (end_episode):
     world.end_episode()
@@ -63,6 +64,12 @@ def build_world(args, enable_draw):
   print("int_output_path=", int_output_path)
   agent_files = pybullet_data.getDataPath() + "/" + arg_parser.parse_string("agent_files")
 
+  meta_agent = arg_parser.parse_string("meta_agent")
+  print("meta_agent=", meta_agent)
+  if meta_agent:
+    sub_model_files = arg_parser.parse_string("sub_model_files")
+    print("sub_model_files=", sub_model_files)
+
   AGENT_TYPE_KEY = "AgentType"
 
   print("agent_file=", agent_files)
@@ -72,7 +79,11 @@ def build_world(args, enable_draw):
     assert AGENT_TYPE_KEY in json_data
     agent_type = json_data[AGENT_TYPE_KEY]
     print("agent_type=", agent_type)
-    agent = PPOAgent(world, id, json_data)
+
+    if meta_agent:
+      agent = METAAgent(world, id, json_data)
+    else:
+      agent = PPOAgent(world, id, json_data)
 
     agent.set_enable_training(False)
     world.reset()
