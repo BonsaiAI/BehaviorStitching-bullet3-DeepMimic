@@ -2,7 +2,9 @@
 /build3/gmake
 /build3/vs2010
 /build_cmake/
-**.ideal/**
+
+*.idea/*
+examples/pybullet/gym/.idea/*
 
 *.pyc
 
