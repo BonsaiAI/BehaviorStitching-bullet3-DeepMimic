@@ -3,10 +3,14 @@
 /build3/vs2010
 /build_cmake/
 
-*.idea/*
-examples/pybullet/gym/.idea/*
+**/.idea/**
+# examples/pybullet/gym/.idea/*
+
+**.swp
+**.un~
 
 *.pyc
+
 
 # Python
 __pycache__/
