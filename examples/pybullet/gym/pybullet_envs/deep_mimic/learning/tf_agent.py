@@ -11,8 +11,10 @@ class TFAgent(RLAgent):
   RESOURCE_SCOPE = 'resource'
   SOLVER_SCOPE = 'solvers'
 
-  def __init__(self, world, id, json_data):
-    self.tf_scope = 'agent'
+  def __init__(self, world, id, json_data, agent_id_scope = ''):
+    self.tf_scope = 'agent' + agent_id_scope
+    # self.agent_id_scope = agent_id_scope
+
     self.graph = tf.Graph()
     self.sess = tf.Session(graph=self.graph)
 

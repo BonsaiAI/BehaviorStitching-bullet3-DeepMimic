@@ -3,8 +3,6 @@ import copy as copy
 import tensorflow as tf
 
 from pybullet_envs.deep_mimic.learning.pg_agent import PGAgent
-from pybullet_envs.deep_mimic.learning.meta_ppo_agent import MetaPPOAgent
-
 from pybullet_envs.deep_mimic.learning.solvers.mpi_solver import MPISolver
 import pybullet_envs.deep_mimic.learning.tf_util as TFUtil
 import pybullet_envs.deep_mimic.learning.rl_util as RLUtil
@@ -12,16 +10,13 @@ from pybullet_utils.logger import Logger
 import pybullet_utils.mpi_util as MPIUtil
 import pybullet_utils.math_util as MathUtil
 from pybullet_envs.deep_mimic.env.env import Env
-
-import pybullet_data
 '''
-Meta Policy Optimization Agent
+Proximal Policy Optimization Agent
 '''
 
 
-
-class METAAgent(PGAgent):
-  NAME = "META"
+class MetaPPOAgent(PGAgent):
+  NAME = "PPO"
   EPOCHS_KEY = "Epochs"
   BATCH_SIZE_KEY = "BatchSize"
   RATIO_CLIP_KEY = "RatioClip"
@@ -30,107 +25,9 @@ class METAAgent(PGAgent):
   TAR_CLIP_FRAC = "TarClipFrac"
   ACTOR_STEPSIZE_DECAY = "ActorStepsizeDecay"
 
-  def __init__(self, world, id, json_data):
-    super().__init__(world, id, json_data)
-
-    self._process_sub_model_files()
-
-    self._create_dumy_agents(world, json_data)
-
-    # loading of prev trained models
-    self._load_prev_ppo_models()
-    self._averaging_prev_models()
-
-    # self._create_new_vars()
-
-    return
-
-  def _process_sub_model_files(self):
-    self.arg_parser = self.world.arg_parser._table
-    self.sub_model_files = self.arg_parser['sub_model_files']
-    # if not any(x == self.arg_parser['model_files'][0] for x in self.sub_model_files):
-    #   self.sub_model_files.append(self.arg_parser['model_files'][0])
-
-    return
-
-  def _create_dumy_agents(self, world, json_data):
-    self.ppo_agents={}
-    for i in range(len(self.sub_model_files)):
-      self.ppo_agents[self.sub_model_files[i]] = MetaPPOAgent(world, i+1, json_data)#, str(i))
-
-    for file_key in self.ppo_agents:
-      self.ppo_agents[file_key].load_model(pybullet_data.getDataPath() + "/" + file_key)
-
-    return
-
-  def _load_prev_ppo_models(self):
-    self.tf_model_data_np = []
-    # load
-    for file in self.sub_model_files:
-      current_ppo_agent = self.ppo_agents[file]
-      # with current_ppo_agent.sess.as_default
-      in_path = pybullet_data.getDataPath() + "/" + file
-      current_ppo_agent.saver.restore(current_ppo_agent.sess, in_path)
-
-      # with tf.variable_scope('main/actor'):
-      with current_ppo_agent.sess as sess:
-        dict = TFUtil.save_to_dict(sess, scope=current_ppo_agent.tf_scope + '/' + 'main/actor')
-
-      # tf_var = current_ppo_agent._tf_vars('main/actor')
-      # np_var = current_ppo_agent.sess.run(tf_var)
-      # dict = {}
-      # for t, n in zip(tf_var, np_var):
-      #   dict[t.name] = n
-      self.tf_model_data_np.append(dict)
-
-    return
-
-  def _averaging_prev_models(self):
-    self.np_averaged_data = []
-    average_dict = {}
-    for key in self.tf_model_data_np[0]:
-      # average_dict[key] = self.tf_model_data_np[1][key] # walking only
-      average_dict[key] = (self.tf_model_data_np[0][key] + self.tf_model_data_np[1][key])/2 #average of walking and jumping
-    self.np_averaged_data = average_dict
-    return average_dict
-
-  # def _create_new_vars(self):
-  #   with self.sess.as_default(), self.graph.as_default():
-  #     for key in self.np_averaged_data:
-  #       var_name = "meta/" + key.split(':')[0]
-  #       tmp = tf.get_variable(var_name,
-  #                             initializer=self.np_averaged_data[key])
-  #   return
-
-
-  def load_model(self, in_path):
-    with self.sess.as_default(), self.graph.as_default():
-      self.saver.restore(self.sess, in_path)
-      self._load_normalizers()
-      Logger.print2('Model loaded from: ' + in_path)
-
-      # load processed parameters
-      TFUtil.load_from_dict(self.sess, self.np_averaged_data)
-
-      # ops = {}
-      # with tf.variable_scope('', reuse=True):
-      #   for key in self.np_averaged_data:
-      #     # tmp = tf.get_variable(key)
-      #
-      #     # self.graph.get_tensor_by_name(key)
-      #     var_name = "meta/" + key.split(':')[0]
-      #     tmp = tf.get_variable(var_name,
-      #                     initializer=self.np_averaged_data[key])
-      #     # tf.add_to_collection(var_name, tmp)
-      #     ops[key] = tf.assign(self.graph.get_tensor_by_name(key),
-      #                    tf.get_variable(var_name,
-      #                                    initializer=self.np_averaged_data[key])
-      #                    )
-      #
-      #   self.sess.run(tf.global_variables_initializer())
-      #   for key in self.np_averaged_data:
-      #     self.sess.run(ops[key])
-
+  def __init__(self, world, id, json_data, agent_id_scope = ''):
+    super().__init__(world, id, json_data, agent_id_scope)
+    # self.agent_id_scope = agent_id_scope
     return
 
   def _load_params(self, json_data):
@@ -184,7 +81,7 @@ class METAAgent(PGAgent):
     self.exp_mask_tf = tf.placeholder(tf.float32, shape=[None], name="exp_mask")
 
     with tf.variable_scope('main'):
-      with tf.variable_scope('actor'):
+      with tf.variable_scope('actor' ):
         self.a_mean_tf = self._build_net_actor(actor_net_name, actor_init_output_scale)
       with tf.variable_scope('critic'):
         self.critic_tf = self._build_net_critic(critic_net_name)
@@ -275,40 +172,20 @@ class METAAgent(PGAgent):
     return
 
   def _decide_action(self, s, g):
-
-    # self.sess.close()
-
-    # with self.sess.as_default(), self.graph.as_default():
-    self._exp_action = self._enable_stoch_policy() and MathUtil.flip_coin(
-        self.exp_params_curr.rate)
-    #print("_decide_action._exp_action=",self._exp_action)
-    a, logp = self._eval_actor(s, g, self._exp_action)
+    with self.sess.as_default(), self.graph.as_default():
+      self._exp_action = self._enable_stoch_policy() and MathUtil.flip_coin(
+          self.exp_params_curr.rate)
+      #print("_decide_action._exp_action=",self._exp_action)
+      a, logp = self._eval_actor(s, g, self._exp_action)
     return a[0], logp[0]
 
   def _eval_actor(self, s, g, enable_exp):
     s = np.reshape(s, [-1, self.get_state_size()])
     g = np.reshape(g, [-1, self.get_goal_size()]) if self.has_goal() else None
 
-    n = len(self.ppo_agents) # number of agents
-    w = np.zeros((n, 1), dtype=float)
-    w[0] = 1
+    feed = {self.s_tf: s, self.g_tf: g, self.exp_mask_tf: np.array([1 if enable_exp else 0])}
 
-    a, logp = None, None
-    for i in range(n):
-      agent = self.ppo_agents[self.sub_model_files[1]]
-
-      tmp_a, tmp_logp = agent._decide_action(s, g)
-      tmp_val = agent._eval_critic(s, g)
-      if i == 0:
-        a = tmp_a * w[i]
-        logp = tmp_logp * w[i]
-      else:
-        a += tmp_a * w[i]
-        logp += tmp_logp * w[i]
-
-    # feed = {self.s_tf: s, self.g_tf: g, self.exp_mask_tf: np.array([1 if enable_exp else 0])}
-
-    # a, logp = self.sess.run([self.sample_a_tf, self.sample_a_logp_tf], feed_dict=feed)
+    a, logp = self.sess.run([self.sample_a_tf, self.sample_a_logp_tf], feed_dict=feed)
     return a, logp
 
   def _train_step(self):
